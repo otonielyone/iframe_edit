@@ -1,3 +1,4 @@
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -82,10 +83,23 @@ def duplicate_row(driver, timeout, mls):
 
     find = driver.find_element(by=By.XPATH, value='//body[@id="dmRoot"]//div[@data-title="Text & Image"]')
 
-    # Scroll to the element inside the iframe using JavaScript
     driver.execute_script("arguments[0].scrollIntoView(true);", find)
+    
+  
+    # Get the HTML content of the original element inside the iframe
+    original_element_html = find.get_attribute('outerHTML')
 
-    find.click()
+    # Create a duplicate of the original element's HTML
+    duplicate_element_html = f"<div>{original_element_html}</div>"
+
+    # Insert the duplicate element directly under the original element
+    driver.execute_script("arguments[0].insertAdjacentHTML('afterend', arguments[1]);", find, duplicate_element_html)
+
+    new_element = find.find_element(By.XPATH, './following-sibling::div')
+
+    # Click on the new element
+    new_element.click()
+
 
 def main():
     timeout = 20
