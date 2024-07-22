@@ -78,58 +78,74 @@ def enter_iframe(driver, timeout, mls):
     
 
 def duplicate_row(driver, timeout, mls):
-
+    #Find element and scroll to it
     find = driver.find_element(by=By.XPATH, value='//body[@id="dmRoot"]//div[@data-title="Text & Image"]')
     driver.execute_script("arguments[0].scrollIntoView(true);", find)
   
+    #Get the elements HTML and replicate the div
     original_element_html = find.get_attribute('outerHTML')
     duplicate_element_html = f"<div>{original_element_html}</div>"
     driver.execute_script("arguments[0].insertAdjacentHTML('afterend', arguments[1]);", find, duplicate_element_html)
     
+    #Select the newly created div
     new_element = find.find_element(By.XPATH, './following-sibling::div')
-
     
-    # Switch back to default content
+    #Find CSS version of the new elelemnt and click it to reveal menu
     div_element = new_element.find_element(By.CSS_SELECTOR, "div.wrapper")
     driver.execute_script('arguments[0].click();', div_element)
 
+    # Switch back to default content
     driver.switch_to.default_content()
 
-    # Wait for element outside iframe to appear
- #   element_present = WebDriverWait(driver, 10).until(
- #       EC.visibility_of_element_located((By.ID, "widgetEditorWrapper"))
- #   )
-
-    # Check if element is found
-#    if element_present:
-#            print('found')                
-#    
-#            if div_element:    
-#                f = driver.find_elements(by=By.CSS_SELECTOR, value='div.groupContainer')
-#                print("Found and visible.")
-#
-    y = driver.find_element(by=By.XPATH, value="//span[contains(text(),'Here will Go the address')]")
+    #Find line 1/5 street
+    y = driver.find_element(by=By.XPATH, value="//span[contains(text(),'street:')]")
     if y:
         driver.execute_script("arguments[0].scrollIntoView(true);", y)
-     #y.send_keys('test')
+        street = "street: 10804 Violet Ct"
+        driver.execute_script("arguments[0].innerText = arguments[1];", y, street)
 
-                ## Get the current text content
-                #current_text = f[5].text
-                #print("Current text:", current_text)
+    #Find line 2/5 unit
+    o = driver.find_element(by=By.XPATH, value="//span[contains(text(),'unit:')]")
+    if o:
+        driver.execute_script("arguments[0].scrollIntoView(true);", o)
+        unit = "apt/unit: None"
+        driver.execute_script("arguments[0].innerText = arguments[1];", o, unit)
 
-                ## Replace the text content with a new value
-        new_text = "New text value"
-        driver.execute_script("arguments[0].innerText = arguments[1];", y, new_text)
-#spacing        
-                #if div_element:    
-                #    f = driver.find_elements(by=By.CSS_SELECTOR, value='div.groupContainer.Container-main-11_m_t63._group.Group-module-main-eV_m_t63.Group-module-flex-1o_m_t63')
-                #    driver.execute_script("arguments[0].scrollIntoView(true);", f[3])
-                #    f[3].click()
-                #    print("Found and visible.")
+    #Find line 3/5 county
+    n = driver.find_element(by=By.XPATH, value="//span[contains(text(),'county:')]")
+    if n:
+        driver.execute_script("arguments[0].scrollIntoView(true);", n)
+        county = "county: Manassas"
+        driver.execute_script("arguments[0].innerText = arguments[1];", n, county)
+
+    #Find line 4/5 zip
+    e = driver.find_element(by=By.XPATH, value="//span[contains(text(),'zip:')]")
+    if e:
+        driver.execute_script("arguments[0].scrollIntoView(true);", e)
+        zip = "zip: 20109"
+        driver.execute_script("arguments[0].innerText = arguments[1];", e, zip)
+
+    #Find line 5/5 cost
+    r = driver.find_element(by=By.XPATH, value="//span[contains(text(),'cost:')]")
+    if r:
+        driver.execute_script("arguments[0].scrollIntoView(true);", r)
+        cost = "cost: $2000"
+        driver.execute_script("arguments[0].innerText = arguments[1];", r, cost)
 
 
+def change_alt_text(driver, timeout, mls):
+    #Find line 5/5 cost
+    alt_txt = driver.find_element(by=By.CSS_SELECTOR, value='input.textBox--input.TextBox-layout-full-22_m_9ua.TextBox-main-Ap_m_9ua.TextBox-valid-1d_m_9ua[aria-label="Alt text"]')
+    if alt_txt:
+        print('found')
+        # Define the value you want to set
+        txt = "Listing: $2000 10804 Violet Ct, Manassas VA 20109"
 
-        # Handle the next_div as needed
+        # Clear the existing text (if any) and set the new value
+        alt_txt.clear()  # Clear existing text
+        alt_txt.send_keys(txt)  # Set new value
+
+
 def main():
     timeout = 20
     add_username = "otonielyone@gmail.com"
@@ -141,6 +157,7 @@ def main():
     for mls in list:
         enter_iframe(driver, timeout, mls)
         duplicate_row(driver,timeout, mls[0])
+        change_alt_text(driver, timeout, mls)
         #Swap out text in new element
         #Add main photo
         #Add in pop up 
