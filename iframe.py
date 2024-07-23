@@ -61,6 +61,45 @@ async def enter_iframe(driver, timeout, mls):
     iframe = driver.find_element(By.ID, '_preview')
     driver.switch_to.frame(iframe)
 
+async def description_outer(driver, timeout, mls):
+    try:
+        await enter_iframe(driver, timeout, mls)
+       
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'street:')]"))
+        )     
+        driver.execute_script("arguments[0].scrollIntoView(true);", element)
+
+        street = "street: 10804 Violet Ct"
+        driver.execute_script("arguments[0].textContent = arguments[1];", element, street)
+        
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'unit:')]"))
+        )        
+        unit = "apt/unit: None"
+        driver.execute_script("arguments[0].textContent = arguments[1];", element, unit)
+
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'county:')]"))
+        )        
+        county = "county: Manassas"
+        driver.execute_script("arguments[0].textContent = arguments[1];", element, county)
+
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'zip:')]"))
+        )        
+        zip_code = "zip: 20109"  
+        driver.execute_script("arguments[0].textContent = arguments[1];", element, zip_code)
+
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'cost:')]"))
+        )        
+        cost = "cost: $2000"  
+        driver.execute_script("arguments[0].textContent = arguments[1];", element, cost)
+    
+    except Exception as e:
+        print(f"Error with description in row: {e}")
+
 async def duplicate_row(driver, timeout, mls):
     try:
         find = driver.find_element(By.XPATH, '//body[@id="dmRoot"]//div[@data-title="Text & Image"]')
@@ -74,37 +113,35 @@ async def duplicate_row(driver, timeout, mls):
     except Exception as e:
         print(f"Error duplicating row: {e}")
 
-async def description(driver, timeout, mls):
+async def description_inner(driver, timeout, mls):
     try:
-        await asyncio.sleep(1)  # A small delay to ensure the iframe is fully loaded
         driver.switch_to.default_content()
 
         y = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'street:')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", y)
+        #street = ""
         street = "street: 10804 Violet Ct"
         driver.execute_script("arguments[0].innerText = arguments[1];", y, street)
 
         o = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'unit:')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", o)
+        #unit = ""
         unit = "apt/unit: None"
         driver.execute_script("arguments[0].innerText = arguments[1];", o, unit)
 
         n = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'county:')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", n)
+        #county = ""
         county = "county: Manassas"
         driver.execute_script("arguments[0].innerText = arguments[1];", n, county)
 
         e = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'zip:')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", e)
+        #zip_code = ""
         zip_code = "zip: 20109"
         driver.execute_script("arguments[0].innerText = arguments[1];", e, zip_code)
 
         r = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'cost:')]")))
-        driver.execute_script("arguments[0].scrollIntoView(true);", r)
+        #cost = ""
         cost = "cost: $2000"
         driver.execute_script("arguments[0].innerText = arguments[1];", r, cost)
-
-        driver.switch_to.default_content()  # Switch back to default content after interacting with iframe
+        
     except Exception as e:
         print(f"Error setting description: {e}")
 
@@ -151,13 +188,23 @@ async def change_photo(driver, timeout, mls):
         file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'
         file_input.send_keys(file_path)
 
-        await enter_iframe(driver, timeout, mls)
-
-        add_me = "div[id='1210442206"
-        u = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.CSS_SELECTOR, add_me)))
-        driver.execute_script('arguments[0].click();', u)
     except Exception as e:
         print(f"Error changing photo: {e}")
+
+async def close_menus(driver, timeout, mls):
+    try:
+        await enter_iframe(driver, timeout, mls)
+
+        close_images = "//div[@id='1210442206']"
+        # Wait for the section to be clickable
+        close1 = WebDriverWait(driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, close_images))
+        )
+        driver.execute_script('arguments[0].click();', close1)
+
+
+    except Exception as e:
+        print(f"Error closing menus: {e}")
 
 async def main():
     timeout = 20
@@ -169,15 +216,16 @@ async def main():
         await login(driver, timeout, add_username, add_password)
         mls_list = [["VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
         for mls in mls_list:
-            await enter_iframe(driver, timeout, mls)
+            await description_outer(driver, timeout, mls)
             await duplicate_row(driver, timeout, mls[0])
-            await description(driver, timeout, mls)
+            await description_inner(driver, timeout, mls)
             await change_alt_text(driver, timeout, mls)
             await change_popup(driver, timeout, mls)
             await change_photo(driver, timeout, mls)
+            await close_menus(driver, timeout, mls)
 
     finally:
-        await asyncio.sleep(10)
+        await asyncio.sleep(timeout)
         driver.quit()
 
 if __name__ == "__main__":
