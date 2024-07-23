@@ -1,4 +1,4 @@
-import time
+import asyncio
 import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 
-def setup_options():
+async def setup_driver():
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -21,12 +21,11 @@ def setup_options():
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     return driver
 
-def login(driver, timeout, add_username, add_password):
+async def login(driver, timeout, add_username, add_password):
     driver.get("https://www.websiteeditor.realtor/home/site/94fbcdbc/rentals")
-
+    
     try:
-        element_present = EC.presence_of_element_located((By.XPATH, '//input[@name="j_username"]'))
-        WebDriverWait(driver, timeout).until(element_present)
+        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_username"]')))
     except TimeoutException:
         print("Timed out waiting for Login Page to Load")
         sys.exit()
@@ -35,30 +34,26 @@ def login(driver, timeout, add_username, add_password):
     add_email.send_keys(add_username)
 
     try:
-        element_present = EC.presence_of_element_located((By.XPATH, '//input[@name="j_password"]'))
-        WebDriverWait(driver, timeout).until(element_present)
+        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_password"]')))
     except TimeoutException:
-        print("Timed out waiting for Login Page to Load")
+        print("Timed out waiting for Password Field")
         sys.exit()
 
     add_pass = driver.find_element(By.XPATH, '//input[@name="j_password"]')
     add_pass.send_keys(add_password)
 
     try:
-        element_present = EC.presence_of_element_located((By.XPATH, '//button[text()="Login"]'))
-        WebDriverWait(driver, timeout).until(element_present)
+        WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Login"]')))
     except TimeoutException:
-        print("Timed out waiting for Login Page to Load")
+        print("Timed out waiting for Login Button")
         sys.exit()
 
     login = driver.find_element(By.XPATH, '//button[text()="Login"]')
     driver.execute_script('arguments[0].click();', login)
-    driver.execute_script('arguments[0].click();', login)
 
-def enter_iframe(driver, timeout, mls):
+async def enter_iframe(driver, timeout, mls):
     try:
-        element_present = EC.presence_of_element_located((By.ID, '_preview'))
-        WebDriverWait(driver, timeout).until(element_present)
+        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.ID, '_preview')))
     except TimeoutException:
         print("Timed out waiting for Iframe to Load")
         sys.exit()
@@ -66,7 +61,7 @@ def enter_iframe(driver, timeout, mls):
     iframe = driver.find_element(By.ID, '_preview')
     driver.switch_to.frame(iframe)
 
-def duplicate_row(driver, timeout, mls):
+async def duplicate_row(driver, timeout, mls):
     try:
         find = driver.find_element(By.XPATH, '//body[@id="dmRoot"]//div[@data-title="Text & Image"]')
         driver.execute_script("arguments[0].scrollIntoView(true);", find)
@@ -79,9 +74,9 @@ def duplicate_row(driver, timeout, mls):
     except Exception as e:
         print(f"Error duplicating row: {e}")
 
-def description(driver, timeout, mls):
+async def description(driver, timeout, mls):
     try:
-        # Switch back to default content
+        await asyncio.sleep(1)  # A small delay to ensure the iframe is fully loaded
         driver.switch_to.default_content()
 
         y = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'street:')]")))
@@ -113,8 +108,7 @@ def description(driver, timeout, mls):
     except Exception as e:
         print(f"Error setting description: {e}")
 
-
-def change_alt_text(driver, timeout, mls):
+async def change_alt_text(driver, timeout, mls):
     try:
         alt_txt = driver.find_element(By.XPATH, "//input[@aria-label='Alt text']")
         txt = "Listing: $2000 10804 Violet Ct, Manassas VA 20109"
@@ -123,7 +117,7 @@ def change_alt_text(driver, timeout, mls):
     except Exception as e:
         print(f"Error changing alt text: {e}")
 
-def change_popup(driver, timeout, mls):
+async def change_popup(driver, timeout, mls):
     try:
         section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, "//span[@class='fa fa-chevron-right']")))
         driver.execute_script('arguments[0].click();', section)
@@ -144,7 +138,7 @@ def change_popup(driver, timeout, mls):
     except Exception as e:
         print(f"Error changing popup: {e}")
 
-def change_photo(driver, timeout, mls):
+async def change_photo(driver, timeout, mls):
     try:
         css_section = "//button[normalize-space()='Replace']"
         section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, css_section)))
@@ -157,7 +151,7 @@ def change_photo(driver, timeout, mls):
         file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'
         file_input.send_keys(file_path)
 
-        enter_iframe(driver, timeout, mls)
+        await enter_iframe(driver, timeout, mls)
 
         add_me = "div[id='1210442206"
         u = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.CSS_SELECTOR, add_me)))
@@ -165,26 +159,26 @@ def change_photo(driver, timeout, mls):
     except Exception as e:
         print(f"Error changing photo: {e}")
 
-def main():
+async def main():
     timeout = 20
     add_username = "otonielyone@gmail.com"
     add_password = "Exotica12345"
-    driver = setup_options()
+    driver = await setup_driver()
 
     try:
-        login(driver, timeout, add_username, add_password)
+        await login(driver, timeout, add_username, add_password)
         mls_list = [["VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
         for mls in mls_list:
-            enter_iframe(driver, timeout, mls)
-            duplicate_row(driver, timeout, mls[0])
-            description(driver, timeout, mls)
-            change_alt_text(driver, timeout, mls)
-            change_popup(driver, timeout, mls)
-            change_photo(driver, timeout, mls)
+            await enter_iframe(driver, timeout, mls)
+            await duplicate_row(driver, timeout, mls[0])
+            await description(driver, timeout, mls)
+            await change_alt_text(driver, timeout, mls)
+            await change_popup(driver, timeout, mls)
+            await change_photo(driver, timeout, mls)
 
     finally:
-        time.sleep(10)
+        await asyncio.sleep(10)
         driver.quit()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
