@@ -144,6 +144,15 @@ def duplicate_row(driver, timeout, mls):
 
 
 def change_alt_text(driver, timeout, mls):
+
+    try:
+        element_present = EC.presence_of_element_located((By.CSS_SELECTOR, 'input.textBox--input.TextBox-layout-full-22_m_9ua.TextBox-main-Ap_m_9ua.TextBox-valid-1d_m_9ua[aria-label="Alt text"]'))
+        WebDriverWait(driver, timeout).until(element_present)
+
+    except TimeoutException:
+            print("Timed out waiting for Login Page to Load")
+            sys.exit()
+
     #Find line 5/5 cost
     alt_txt = driver.find_element(by=By.CSS_SELECTOR, value='input.textBox--input.TextBox-layout-full-22_m_9ua.TextBox-main-Ap_m_9ua.TextBox-valid-1d_m_9ua[aria-label="Alt text"]')
     if alt_txt:
@@ -157,17 +166,28 @@ def change_alt_text(driver, timeout, mls):
 
 def change_popup(driver, timeout, mls):
     ##click popup section
-    popup_section = driver.find_element(by=By.XPATH, value='//label[contains(text(), "Linked to Popup:")]')
+    section = WebDriverWait(driver, timeout).until(
+    EC.element_to_be_clickable((By.CSS_SELECTOR, 'label.Label-module-main-26_m_9ua.Label-module-noOverflow-Fd_m_9ua.Label-module-noWhiteSpaceWrap-25_m_9ua.Label-module-hideOnEmpty-2H_m_9ua.Label-module-fixLastPadding-2Y_m_9ua[data-auto="label"]'))
+    )
+    popup_section = driver.find_element(by=By.CSS_SELECTOR, value='label.Label-module-main-26_m_9ua.Label-module-noOverflow-Fd_m_9ua.Label-module-noWhiteSpaceWrap-25_m_9ua.Label-module-hideOnEmpty-2H_m_9ua.Label-module-fixLastPadding-2Y_m_9ua[data-auto="label"]')
     driver.execute_script('arguments[0].click();', popup_section)
+    #Click pop up and revel inner menu
 
+    inner = "//div[contains(text(),'Popup')]"
+    # Wait for the section to be clickable
+    section = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.XPATH, inner))
+    )
+    section.click()
+ 
+   #Select drop down menu
     xpath_section = '//section[contains(@class, "DropdownField-main-2a_m_9ua")]'
     # Wait for the section to be clickable
     section = WebDriverWait(driver, timeout).until(
         EC.element_to_be_clickable((By.XPATH, xpath_section))
     )
-    # Click on the section to reveal the dropdown
     section.click()
-
+    #Select entry
     xpath_dropdown_value = f'//input[@role="combobox"]'
     try_me = driver.find_elements(by=By.XPATH, value=xpath_dropdown_value)
     driver.execute_script('arguments[0].click();', try_me[2])
@@ -183,6 +203,24 @@ def change_photo(driver, timeout, mls):
     driver.execute_script("arguments[0].scrollIntoView(true);", section)
     section.click()
 
+    d = f'//div[@data-auto="uploadImages"]//div[@role="button"]'
+    # Wait for the section to be clickable
+    section = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.XPATH, d))
+    )
+    if section: 
+        print('found upload')
+        #section.click()
+
+def select_photo(driver, timeout, mls):
+        file_input = driver.find_element(By.XPATH, '//input[@type="file"]')  # Adjust XPath as needed
+        
+        # Provide the full path to the file you want to upload
+        file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'  # Adjust based on your actual file path
+        
+        # Upload the file using send_keys
+        file_input.send_keys(file_path)
+
 def main():
     timeout = 20
     add_username = "otonielyone@gmail.com"
@@ -190,13 +228,14 @@ def main():
     driver = setup_options()
     login(driver, timeout, add_username, add_password)
 
-    list = [["TT: VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
+    list = [["VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
     for mls in list:
         enter_iframe(driver, timeout, mls)
         duplicate_row(driver,timeout, mls[0])
         change_alt_text(driver, timeout, mls)
         change_popup(driver, timeout, mls)
         change_photo(driver, timeout, mls)
+        select_photo(driver, timeout, mls)
 
     time.sleep(10)
     driver.quit()
