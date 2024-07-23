@@ -1,6 +1,7 @@
 import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -52,7 +53,6 @@ def login(driver, timeout, add_username, add_password):
     add_pass = driver.find_element(by=By.XPATH, value='//input[@name="j_password"]')
     add_pass.send_keys(add_password)
 
-
     try:
         element_present = EC.presence_of_element_located((By.XPATH, '//button[text()="Login"]'))
         WebDriverWait(driver, timeout).until(element_present)
@@ -62,7 +62,9 @@ def login(driver, timeout, add_username, add_password):
         sys.exit()
 
     login = driver.find_element(by=By.XPATH, value='//button[text()="Login"]')
-    login.click()
+    driver.execute_script('arguments[0].click();', login)
+    driver.execute_script('arguments[0].click();', login)
+
 
 def enter_iframe(driver, timeout, mls):
     try:
@@ -96,6 +98,14 @@ def duplicate_row(driver, timeout, mls):
 
     # Switch back to default content
     driver.switch_to.default_content()
+
+    try:
+        element_present = EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'street:')]"))
+        WebDriverWait(driver, timeout).until(element_present)
+
+    except TimeoutException:
+            print("Timed out waiting for Login Page to Load")
+            sys.exit()
 
     #Find line 1/5 street
     y = driver.find_element(by=By.XPATH, value="//span[contains(text(),'street:')]")
@@ -145,6 +155,33 @@ def change_alt_text(driver, timeout, mls):
         alt_txt.clear()  # Clear existing text
         alt_txt.send_keys(txt)  # Set new value
 
+def change_popup(driver, timeout, mls):
+    ##click popup section
+    popup_section = driver.find_element(by=By.XPATH, value='//label[contains(text(), "Linked to Popup:")]')
+    driver.execute_script('arguments[0].click();', popup_section)
+
+    xpath_section = '//section[contains(@class, "DropdownField-main-2a_m_9ua")]'
+    # Wait for the section to be clickable
+    section = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.XPATH, xpath_section))
+    )
+    # Click on the section to reveal the dropdown
+    section.click()
+
+    xpath_dropdown_value = f'//input[@role="combobox"]'
+    try_me = driver.find_elements(by=By.XPATH, value=xpath_dropdown_value)
+    driver.execute_script('arguments[0].click();', try_me[2])
+    try_me[2].send_keys(f'{mls[0]}')
+    try_me[2].send_keys(Keys.ENTER)
+
+def change_photo(driver, timeout, mls):
+    css_section = "img[alt='text_image_widget_default_image.jpg']"
+    # Wait for the section to be clickable
+    section = WebDriverWait(driver, timeout).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, css_section))
+    )
+    driver.execute_script("arguments[0].scrollIntoView(true);", section)
+    section.click()
 
 def main():
     timeout = 20
@@ -153,16 +190,14 @@ def main():
     driver = setup_options()
     login(driver, timeout, add_username, add_password)
 
-    list = [["VAFX2192025", "1232 Clay Ave #1A, Bronx NY 10456"]]
+    list = [["TT: VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
     for mls in list:
         enter_iframe(driver, timeout, mls)
         duplicate_row(driver,timeout, mls[0])
         change_alt_text(driver, timeout, mls)
-        #Swap out text in new element
-        #Add main photo
-        #Add in pop up 
+        change_popup(driver, timeout, mls)
+        change_photo(driver, timeout, mls)
 
-            
     time.sleep(10)
     driver.quit()
 
