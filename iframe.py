@@ -24,33 +24,20 @@ async def setup_driver():
 async def login(driver, timeout, add_username, add_password):
     driver.get("https://www.websiteeditor.realtor/home/site/94fbcdbc/rentals")
     
-    try:
-        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_username"]')))
-    except TimeoutException:
-        print("Timed out waiting for Login Page to Load")
-        sys.exit()
-
+    WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_username"]')))
     add_email = driver.find_element(By.XPATH, '//input[@name="j_username"]')
     add_email.send_keys(add_username)
-
-    try:
-        WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_password"]')))
-    except TimeoutException:
-        print("Timed out waiting for Password Field")
-        sys.exit()
-
+    
+    WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_password"]')))
     add_pass = driver.find_element(By.XPATH, '//input[@name="j_password"]')
     add_pass.send_keys(add_password)
-
-    try:
-        WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, '//button[text()="Login"]')))
-    except TimeoutException:
-        print("Timed out waiting for Login Button")
-        sys.exit()
-
-    login = driver.find_element(By.XPATH, '//button[text()="Login"]')
-    driver.execute_script('arguments[0].click();', login)
-
+    
+    await asyncio.sleep(3)  # Adjust as needed
+    
+    WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, '//button[@data-auto="login-button"]')))
+    login_button = driver.find_element(By.XPATH, '//button[@data-auto="login-button"]')
+    driver.execute_script('arguments[0].click();', login_button)
+    
 async def enter_iframe(driver, timeout):
     try:
         WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.ID, '_preview')))
@@ -85,12 +72,14 @@ async def add_button(driver, timeout, mls):
 async def add_btn_txt(driver, timeout, mls):
     button_txt ="//input[@placeholder='New Button']"
     address = mls[1]
-    cost = "cost: $2000"
+    cost = "$2000"
     desc = f'{cost} - {address}'
     
     btn_txt_field = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, button_txt)))
     btn_txt_field.clear()
     btn_txt_field.send_keys(desc)
+    btn_txt_field.send_keys(Keys.ENTER)
+    await asyncio.sleep(1)
 
 async def change_popup(driver, timeout, mls):
     try:
@@ -103,6 +92,8 @@ async def change_popup(driver, timeout, mls):
         driver.execute_script('arguments[0].click();', try_me[3])
         try_me[3].send_keys(f'{mls[0]}')
         try_me[3].send_keys(Keys.ENTER)
+        await asyncio.sleep(1)
+
     except Exception as e:
         print(f"Error changing popup: {e}")
 
@@ -114,6 +105,7 @@ async def change_btn_width(driver, timeout, mls):
         px_txt_box.clear()
         px_txt_box.send_keys("500px")
         px_txt_box.send_keys(Keys.ENTER)
+        await asyncio.sleep(1)
 
     except Exception as e:
         print(f"Error selecting design tab: {e}")
@@ -125,6 +117,7 @@ async def change_btn_border(driver, timeout, mls):
         txt_box.click()
         txt_box.clear()
         txt_box.send_keys(Keys.ENTER)
+        await asyncio.sleep(1)
 
     except Exception as e:
         print(f"Error selecting design tab: {e}")
@@ -171,6 +164,9 @@ async def move_button(driver, timeout, mls):
         action.move_to_element(span_element3).perform()
 
     action.release().perform()
+    driver.execute_script("arguments[0].scrollIntoView();", span_element)
+
+
     
 
 async def publish(driver, timeout):
