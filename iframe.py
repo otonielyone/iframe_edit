@@ -67,18 +67,6 @@ async def widget_section(driver, timeout, mls):
     widget_section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, txt)))
     widget_section.click()
 
-async def add_image(driver, timeout, mls):
-    ntxt = "//span[@data-component-name='Typography' and text()='Image']"
-    widget = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, ntxt)))
-    driver.execute_script("arguments[0].scrollIntoView(true);", widget)
-    widget.click()
-    await asyncio.sleep(1)
-    file_input_xpath = '//input[@type="file"]'
-    file_input = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, file_input_xpath)))
-
-    file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'
-    file_input.send_keys(file_path)
-    await asyncio.sleep(2)
 
 async def design_tab(driver, timeout, mls):
     try:
@@ -88,15 +76,6 @@ async def design_tab(driver, timeout, mls):
     except Exception as e:
         print(f"Error se;ecting design tab: {e}")
 
-async def change_img_width(driver, timeout, mls):
-    xpath_expression = "//input[contains(@value, 'px')]"
-    div_element = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath_expression)))
-    div_element.clear()
-    div_element.click()
-    div_element.send_keys(Keys.BACKSPACE)
-    div_element.send_keys("150")
-    div_element.send_keys(Keys.ENTER)
-
 async def add_button(driver, timeout, mls):
     ntxt = "//span[@data-component-name='Typography' and text()='Button']"
     widget = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, ntxt)))
@@ -105,14 +84,13 @@ async def add_button(driver, timeout, mls):
 
 async def add_btn_txt(driver, timeout, mls):
     button_txt ="//input[@placeholder='New Button']"
-    address = "10804 Violet Ct, Manassas VA 20109"
+    address = mls[1]
     cost = "cost: $2000"
     desc = f'{cost} - {address}'
     
     btn_txt_field = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, button_txt)))
     btn_txt_field.clear()
     btn_txt_field.send_keys(desc)
-
 
 async def change_popup(driver, timeout, mls):
     try:
@@ -140,7 +118,6 @@ async def change_btn_width(driver, timeout, mls):
     except Exception as e:
         print(f"Error selecting design tab: {e}")
 
-
 async def change_btn_border(driver, timeout, mls):
     try:
         border = "//input[@value='1px']"
@@ -152,7 +129,6 @@ async def change_btn_border(driver, timeout, mls):
     except Exception as e:
         print(f"Error selecting design tab: {e}")
 
-
 async def close_element_menu(driver, timeout):
     close_txt = "span[data-auto='close-widget-editor'] svg" 
    
@@ -162,8 +138,6 @@ async def close_element_menu(driver, timeout):
     )
     span_element.click()
 
-
-
 async def move_button(driver, timeout, mls):
     # Find the iframe element
     iframe = WebDriverWait(driver, timeout).until(
@@ -171,7 +145,7 @@ async def move_button(driver, timeout, mls):
     )
     driver.switch_to.frame(iframe)
 
-    variable_value = "10804 Violet Ct, Manassas VA 20109"
+    variable_value = mls[0]
     xpath_expression = f"//span[contains(text(), '{variable_value}')]"
     span_element = WebDriverWait(driver, timeout).until(
         EC.visibility_of_element_located((By.XPATH, xpath_expression))
@@ -186,67 +160,26 @@ async def move_button(driver, timeout, mls):
     action.click_and_hold(span_element)
 
     try:
-        # Attempt to move to the target element while performing the drag
         driver.execute_script("arguments[0].scrollIntoView();", span_element3)
         action.move_to_element(span_element3).perform()
     except:
-        # If move_to_element fails, scroll to span_element3 and retry the move
         driver.execute_script("arguments[0].scrollIntoView();", span_element3)
         action.move_to_element(span_element3).perform()
     try:
-        # Attempt to move to the target element while performing the drag
         action.move_to_element(span_element3).perform()
     except:
-        # If move_to_element fails, scroll to span_element3 and retry the move
         driver.execute_script("arguments[0].scrollIntoView();", span_element3)
         action.move_to_element(span_element3).perform()
 
-    # Release the element to drop it
     action.release().perform()
 
-
-
-async def move_image(driver, timeout, mls):
-    xpath_expression2 = f"//img[contains(@src, '{mls[0]}')]"
-    span_element2 = WebDriverWait(driver, timeout).until(
-        EC.visibility_of_element_located((By.XPATH, xpath_expression2))
-    )
-
-    variable_value = "10804 Violet Ct, Manassas VA 20109"
-    xpath_expression = f"//span[contains(text(), '{variable_value}')]"
-    span_element = WebDriverWait(driver, timeout).until(
+async def publish(driver, timeout):
+    xpath_expression = f"//span[normalize-space()='Republish']"
+    republish = WebDriverWait(driver, timeout).until(
         EC.visibility_of_element_located((By.XPATH, xpath_expression))
     )
-
-    action = ActionChains(driver)
-    action.click_and_hold(span_element2)
-
-    try:
-        # Attempt to move to the target element while performing the drag
-        action.move_to_element(span_element).perform()
-    except:
-        # If move_to_element fails, scroll to span_element3 and retry the move
-        driver.execute_script("arguments[0].scrollIntoView();", span_element)
-        action.move_to_element(span_element).perform()
-    try:
-        # Attempt to move to the target element while performing the drag
-        action.move_to_element(span_element).perform()
-    except:
-        # If move_to_element fails, scroll to span_element3 and retry the move
-        driver.execute_script("arguments[0].scrollIntoView();", span_element)
-        action.move_to_element(span_element).perform()
-    try:
-        # Attempt to move to the target element while performing the drag
-        action.move_to_element(span_element).perform()
-    except:
-        # If move_to_element fails, scroll to span_element3 and retry the move
-        driver.execute_script("arguments[0].scrollIntoView();", span_element)
-        action.move_to_element(span_element).perform()
-
-
-    # Release the element to drop it
-    action.release().perform()
-
+    republish.click()
+    await asyncio.sleep(timeout)
 
 async def main():
     timeout = 20
@@ -254,29 +187,23 @@ async def main():
     add_password = "Exotica12345"
     driver = await setup_driver()
 
-    try:
-        await login(driver, timeout, add_username, add_password)
-        mls_list = [["VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
-        for mls in mls_list:
-            await widget_section(driver, timeout, mls)
-            await add_image(driver, timeout, mls)
-            await design_tab(driver, timeout, mls)
-            await change_img_width(driver, timeout, mls)
-            await close_element_menu(driver, timeout)
-            await widget_section(driver, timeout, mls)
-            await add_button(driver, timeout, mls)
-            await add_btn_txt(driver, timeout, mls)
-            await change_popup(driver, timeout, mls)
-            await design_tab(driver, timeout, mls)
-            await change_btn_width(driver, timeout, mls)
-            await change_btn_border(driver, timeout, mls)
-            await close_element_menu(driver, timeout)
-            await move_button(driver, timeout, mls)  
-            await move_image(driver, timeout, mls)  
+    await login(driver, timeout, add_username, add_password)
+    mls_list = ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002"),("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002")
+        
+    for mls in mls_list:
+        await widget_section(driver, timeout, mls)
+        await add_button(driver, timeout, mls)
+        await add_btn_txt(driver, timeout, mls)
+        await change_popup(driver, timeout, mls)
+        await design_tab(driver, timeout, mls)
+        await change_btn_width(driver, timeout, mls)
+        await change_btn_border(driver, timeout, mls)
+        await close_element_menu(driver, timeout)
+        await move_button(driver, timeout, mls)
+        driver.switch_to.default_content()
 
-    finally:
-        await asyncio.sleep(timeout)
-        driver.quit()
+    await publish(driver, timeout)    
+    await asyncio.sleep(timeout)
 
 if __name__ == "__main__":
     asyncio.run(main())
