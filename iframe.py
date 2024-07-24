@@ -145,8 +145,7 @@ async def move_button(driver, timeout, mls):
     )
     driver.switch_to.frame(iframe)
 
-    variable_value = mls[0]
-    xpath_expression = f"//span[contains(text(), '{variable_value}')]"
+    xpath_expression = f"//span[contains(text(), '{mls[1]}')]"
     span_element = WebDriverWait(driver, timeout).until(
         EC.visibility_of_element_located((By.XPATH, xpath_expression))
     )
@@ -172,6 +171,7 @@ async def move_button(driver, timeout, mls):
         action.move_to_element(span_element3).perform()
 
     action.release().perform()
+    
 
 async def publish(driver, timeout):
     xpath_expression = f"//span[normalize-space()='Republish']"
@@ -188,7 +188,7 @@ async def main():
     driver = await setup_driver()
 
     await login(driver, timeout, add_username, add_password)
-    mls_list = ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002"),("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002")
+    mls_list = ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002"), ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002")
         
     for mls in mls_list:
         await widget_section(driver, timeout, mls)
