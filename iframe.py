@@ -51,7 +51,7 @@ async def login(driver, timeout, add_username, add_password):
     login = driver.find_element(By.XPATH, '//button[text()="Login"]')
     driver.execute_script('arguments[0].click();', login)
 
-async def enter_iframe(driver, timeout, mls):
+async def enter_iframe(driver, timeout):
     try:
         WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.ID, '_preview')))
     except TimeoutException:
@@ -61,150 +61,192 @@ async def enter_iframe(driver, timeout, mls):
     iframe = driver.find_element(By.ID, '_preview')
     driver.switch_to.frame(iframe)
 
-async def description_outer(driver, timeout, mls):
+async def widget_section(driver, timeout, mls):
+    #click widget section
+    txt = "(//label[normalize-space()='Widgets'])[1]" 
+    widget_section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, txt)))
+    widget_section.click()
+
+async def add_image(driver, timeout, mls):
+    ntxt = "//span[@data-component-name='Typography' and text()='Image']"
+    widget = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, ntxt)))
+    driver.execute_script("arguments[0].scrollIntoView(true);", widget)
+    widget.click()
+    await asyncio.sleep(1)
+    file_input_xpath = '//input[@type="file"]'
+    file_input = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, file_input_xpath)))
+
+    file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'
+    file_input.send_keys(file_path)
+    await asyncio.sleep(2)
+
+async def design_tab(driver, timeout, mls):
     try:
-        await enter_iframe(driver, timeout, mls)
-       
-        element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'street:')]"))
-        )     
-        driver.execute_script("arguments[0].scrollIntoView(true);", element)
+        design = "//span[normalize-space()='Design']"
+        section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, design)))
+        section.click()
+    except Exception as e:
+        print(f"Error se;ecting design tab: {e}")
 
-        street = "street: 10804 Violet Ct"
-        driver.execute_script("arguments[0].textContent = arguments[1];", element, street)
-        
-        element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'unit:')]"))
-        )        
-        unit = "apt/unit: None"
-        driver.execute_script("arguments[0].textContent = arguments[1];", element, unit)
+async def change_img_width(driver, timeout, mls):
+    xpath_expression = "//input[contains(@value, 'px')]"
+    div_element = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath_expression)))
+    div_element.clear()
+    div_element.click()
+    div_element.send_keys(Keys.BACKSPACE)
+    div_element.send_keys("150")
+    div_element.send_keys(Keys.ENTER)
 
-        element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'county:')]"))
-        )        
-        county = "county: Manassas"
-        driver.execute_script("arguments[0].textContent = arguments[1];", element, county)
+async def add_button(driver, timeout, mls):
+    ntxt = "//span[@data-component-name='Typography' and text()='Button']"
+    widget = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, ntxt)))
+    driver.execute_script("arguments[0].scrollIntoView(true);", widget)
+    widget.click()
 
-        element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'zip:')]"))
-        )        
-        zip_code = "zip: 20109"  
-        driver.execute_script("arguments[0].textContent = arguments[1];", element, zip_code)
-
-        element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, "//p[@class='rteBlock' and contains(text(), 'cost:')]"))
-        )        
-        cost = "cost: $2000"  
-        driver.execute_script("arguments[0].textContent = arguments[1];", element, cost)
+async def add_btn_txt(driver, timeout, mls):
+    button_txt ="//input[@placeholder='New Button']"
+    address = "10804 Violet Ct, Manassas VA 20109"
+    cost = "cost: $2000"
+    desc = f'{cost} - {address}'
     
-    except Exception as e:
-        print(f"Error with description in row: {e}")
+    btn_txt_field = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, button_txt)))
+    btn_txt_field.clear()
+    btn_txt_field.send_keys(desc)
 
-async def duplicate_row(driver, timeout, mls):
-    try:
-        find = driver.find_element(By.XPATH, '//body[@id="dmRoot"]//div[@data-title="Text & Image"]')
-        driver.execute_script("arguments[0].scrollIntoView(true);", find)
-        original_element_html = find.get_attribute('outerHTML')
-        duplicate_element_html = f"<div>{original_element_html}</div>"
-        driver.execute_script("arguments[0].insertAdjacentHTML('afterend', arguments[1]);", find, duplicate_element_html)
-        new_element = find.find_element(By.XPATH, './following-sibling::div')
-        div_element = new_element.find_element(By.CSS_SELECTOR, "div.wrapper")
-        driver.execute_script('arguments[0].click();', div_element)
-    except Exception as e:
-        print(f"Error duplicating row: {e}")
-
-async def description_inner(driver, timeout, mls):
-    try:
-        driver.switch_to.default_content()
-
-        y = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'street:')]")))
-        #street = ""
-        street = "street: 10804 Violet Ct"
-        driver.execute_script("arguments[0].innerText = arguments[1];", y, street)
-
-        o = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'unit:')]")))
-        #unit = ""
-        unit = "apt/unit: None"
-        driver.execute_script("arguments[0].innerText = arguments[1];", o, unit)
-
-        n = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'county:')]")))
-        #county = ""
-        county = "county: Manassas"
-        driver.execute_script("arguments[0].innerText = arguments[1];", n, county)
-
-        e = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'zip:')]")))
-        #zip_code = ""
-        zip_code = "zip: 20109"
-        driver.execute_script("arguments[0].innerText = arguments[1];", e, zip_code)
-
-        r = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, "//span[contains(text(),'cost:')]")))
-        #cost = ""
-        cost = "cost: $2000"
-        driver.execute_script("arguments[0].innerText = arguments[1];", r, cost)
-        
-    except Exception as e:
-        print(f"Error setting description: {e}")
-
-async def change_alt_text(driver, timeout, mls):
-    try:
-        alt_txt = driver.find_element(By.XPATH, "//input[@aria-label='Alt text']")
-        txt = "Listing: $2000 10804 Violet Ct, Manassas VA 20109"
-        alt_txt.clear()
-        alt_txt.send_keys(txt)
-    except Exception as e:
-        print(f"Error changing alt text: {e}")
 
 async def change_popup(driver, timeout, mls):
     try:
-        section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, "//span[@class='fa fa-chevron-right']")))
-        driver.execute_script('arguments[0].click();', section)
-
         inner = "//div[contains(text(),'Popup')]"
         section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, inner)))
         section.click()
 
-        xpath_section = "//span[@id='react-select-4--value']//div[@class='Select-value']"
-        section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, xpath_section)))
-        section.click()
-
         xpath_dropdown_value = f'//input[@role="combobox"]'
         try_me = driver.find_elements(By.XPATH, xpath_dropdown_value)
-        driver.execute_script('arguments[0].click();', try_me[2])
-        try_me[2].send_keys(f'{mls[0]}')
-        try_me[2].send_keys(Keys.ENTER)
+        driver.execute_script('arguments[0].click();', try_me[3])
+        try_me[3].send_keys(f'{mls[0]}')
+        try_me[3].send_keys(Keys.ENTER)
     except Exception as e:
         print(f"Error changing popup: {e}")
 
-async def change_photo(driver, timeout, mls):
+async def change_btn_width(driver, timeout, mls):
     try:
-        css_section = "//button[normalize-space()='Replace']"
-        section = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, css_section)))
-        driver.execute_script("arguments[0].scrollIntoView(true);", section)
-        section.click()
-
-        file_input_xpath = '//input[@type="file"]'
-        file_input = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, file_input_xpath)))
-
-        file_path = f'/home/oyone/Downloads/{mls[0]}.jpg'
-        file_input.send_keys(file_path)
+        px_xpath = "//input[@value='222px']"
+        px_txt_box = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, px_xpath)))
+        px_txt_box.click()
+        px_txt_box.clear()
+        px_txt_box.send_keys("500px")
+        px_txt_box.send_keys(Keys.ENTER)
 
     except Exception as e:
-        print(f"Error changing photo: {e}")
+        print(f"Error selecting design tab: {e}")
 
-async def close_menus(driver, timeout, mls):
+
+async def change_btn_border(driver, timeout, mls):
     try:
-        await enter_iframe(driver, timeout, mls)
-
-        close_images = "//div[@id='1210442206']"
-        # Wait for the section to be clickable
-        close1 = WebDriverWait(driver, timeout).until(
-            EC.element_to_be_clickable((By.XPATH, close_images))
-        )
-        driver.execute_script('arguments[0].click();', close1)
-
+        border = "//input[@value='1px']"
+        txt_box = WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, border)))
+        txt_box.click()
+        txt_box.clear()
+        txt_box.send_keys(Keys.ENTER)
 
     except Exception as e:
-        print(f"Error closing menus: {e}")
+        print(f"Error selecting design tab: {e}")
+
+
+async def close_element_menu(driver, timeout):
+    close_txt = "span[data-auto='close-widget-editor'] svg" 
+   
+    # Wait for the span element to be visible
+    span_element = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, close_txt))
+    )
+    span_element.click()
+
+
+
+async def move_button(driver, timeout, mls):
+    # Find the iframe element
+    iframe = WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.XPATH, "//iframe[@id='_preview']"))
+    )
+    driver.switch_to.frame(iframe)
+
+    variable_value = "10804 Violet Ct, Manassas VA 20109"
+    xpath_expression = f"//span[contains(text(), '{variable_value}')]"
+    span_element = WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.XPATH, xpath_expression))
+    )
+    
+    variable_value3 = "Click here download the Rental Representation Agreement"
+    xpath_expression3 = f"//span[contains(text(), '{variable_value3}')]"
+    span_element3 = WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.XPATH, xpath_expression3))
+    )
+    action = ActionChains(driver)
+    action.click_and_hold(span_element)
+
+    try:
+        # Attempt to move to the target element while performing the drag
+        driver.execute_script("arguments[0].scrollIntoView();", span_element3)
+        action.move_to_element(span_element3).perform()
+    except:
+        # If move_to_element fails, scroll to span_element3 and retry the move
+        driver.execute_script("arguments[0].scrollIntoView();", span_element3)
+        action.move_to_element(span_element3).perform()
+    try:
+        # Attempt to move to the target element while performing the drag
+        action.move_to_element(span_element3).perform()
+    except:
+        # If move_to_element fails, scroll to span_element3 and retry the move
+        driver.execute_script("arguments[0].scrollIntoView();", span_element3)
+        action.move_to_element(span_element3).perform()
+
+    # Release the element to drop it
+    action.release().perform()
+
+
+
+async def move_image(driver, timeout, mls):
+    xpath_expression2 = f"//img[contains(@src, '{mls[0]}')]"
+    span_element2 = WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.XPATH, xpath_expression2))
+    )
+
+    variable_value = "10804 Violet Ct, Manassas VA 20109"
+    xpath_expression = f"//span[contains(text(), '{variable_value}')]"
+    span_element = WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.XPATH, xpath_expression))
+    )
+
+    action = ActionChains(driver)
+    action.click_and_hold(span_element2)
+
+    try:
+        # Attempt to move to the target element while performing the drag
+        action.move_to_element(span_element).perform()
+    except:
+        # If move_to_element fails, scroll to span_element3 and retry the move
+        driver.execute_script("arguments[0].scrollIntoView();", span_element)
+        action.move_to_element(span_element).perform()
+    try:
+        # Attempt to move to the target element while performing the drag
+        action.move_to_element(span_element).perform()
+    except:
+        # If move_to_element fails, scroll to span_element3 and retry the move
+        driver.execute_script("arguments[0].scrollIntoView();", span_element)
+        action.move_to_element(span_element).perform()
+    try:
+        # Attempt to move to the target element while performing the drag
+        action.move_to_element(span_element).perform()
+    except:
+        # If move_to_element fails, scroll to span_element3 and retry the move
+        driver.execute_script("arguments[0].scrollIntoView();", span_element)
+        action.move_to_element(span_element).perform()
+
+
+    # Release the element to drop it
+    action.release().perform()
+
 
 async def main():
     timeout = 20
@@ -216,13 +258,21 @@ async def main():
         await login(driver, timeout, add_username, add_password)
         mls_list = [["VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456"]]
         for mls in mls_list:
-            await description_outer(driver, timeout, mls)
-            await duplicate_row(driver, timeout, mls[0])
-            await description_inner(driver, timeout, mls)
-            await change_alt_text(driver, timeout, mls)
+            await widget_section(driver, timeout, mls)
+            await add_image(driver, timeout, mls)
+            await design_tab(driver, timeout, mls)
+            await change_img_width(driver, timeout, mls)
+            await close_element_menu(driver, timeout)
+            await widget_section(driver, timeout, mls)
+            await add_button(driver, timeout, mls)
+            await add_btn_txt(driver, timeout, mls)
             await change_popup(driver, timeout, mls)
-            await change_photo(driver, timeout, mls)
-            await close_menus(driver, timeout, mls)
+            await design_tab(driver, timeout, mls)
+            await change_btn_width(driver, timeout, mls)
+            await change_btn_border(driver, timeout, mls)
+            await close_element_menu(driver, timeout)
+            await move_button(driver, timeout, mls)  
+            await move_image(driver, timeout, mls)  
 
     finally:
         await asyncio.sleep(timeout)
