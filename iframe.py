@@ -11,32 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 
-async def setup_driver():
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--disable-extensions')
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-    return driver
 
-async def login(driver, timeout, add_username, add_password):
-    driver.get("https://www.websiteeditor.realtor/home/site/94fbcdbc/rentals")
-    
-    WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_username"]')))
-    add_email = driver.find_element(By.XPATH, '//input[@name="j_username"]')
-    add_email.send_keys(add_username)
-    
-    WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.XPATH, '//input[@name="j_password"]')))
-    add_pass = driver.find_element(By.XPATH, '//input[@name="j_password"]')
-    add_pass.send_keys(add_password)
-    
-    await asyncio.sleep(3)  # Adjust as needed
-    
-    WebDriverWait(driver, timeout).until(EC.element_to_be_clickable((By.XPATH, '//button[@data-auto="login-button"]')))
-    login_button = driver.find_element(By.XPATH, '//button[@data-auto="login-button"]')
-    driver.execute_script('arguments[0].click();', login_button)
     
 async def enter_iframe(driver, timeout):
     try:
@@ -95,7 +70,7 @@ async def change_popup(driver, timeout, mls):
         await asyncio.sleep(1)
 
     except Exception as e:
-        print(f"Error changing popup: {e}")
+        print(f"Error changing popup for {mls}: {e}")
 
 async def change_btn_width(driver, timeout, mls):
     try:
@@ -177,15 +152,7 @@ async def publish(driver, timeout):
     republish.click()
     await asyncio.sleep(timeout)
 
-async def main():
-    timeout = 20
-    add_username = "otonielyone@gmail.com"
-    add_password = "Exotica12345"
-    driver = await setup_driver()
-
-    await login(driver, timeout, add_username, add_password)
-    mls_list = ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002"), ("VAR1234567", "1232 Clay Ave #1A, Bronx NY 10456","$2000"), ("VAR7654321", "2321 Yalc Ave #1B, Bronx NY 65501", "$0002")
-        
+async def create_rental_entry_button(mls_list, timeout, driver):
     for mls in mls_list:
         await widget_section(driver, timeout, mls)
         await add_button(driver, timeout, mls)
@@ -198,8 +165,5 @@ async def main():
         await move_button(driver, timeout, mls)
         driver.switch_to.default_content()
 
-    await publish(driver, timeout)    
+#    await publish(driver, timeout)    
     await asyncio.sleep(timeout)
-
-if __name__ == "__main__":
-    asyncio.run(main())
